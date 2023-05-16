@@ -175,5 +175,5 @@ void DiskDriver::Initial(){
         }
     }
 	Kernel::Instance().Initialize(this->addr); //初始化相关全局变量
-	InitialSystem(); //初始化：装填spb和根目录inode,设置user结构中的必要参数"
+	InitialSystem();
 }

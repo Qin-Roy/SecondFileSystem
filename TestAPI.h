@@ -1,6 +1,10 @@
 #ifndef TESTAPI_H
 #define TESTAPI_H
 
+#include <iostream>
+#include <string.h>
+using namespace std;
+
 class TestAPI{
 public:
     TestAPI();
@@ -11,10 +15,10 @@ public:
     void ls();
 
     //创建文件
-    int fcreate(char *filename,int mode);
+    int fcreate(char *filename,string mode);
 
     //打开文件
-    int fopen(char *pathname,int mode);
+    int fopen(char *pathname,string mode);
 
     //写文件
     int fwrite(int fd,char *src,int len);

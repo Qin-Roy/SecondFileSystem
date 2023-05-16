@@ -33,7 +33,7 @@ void TestAPI::ls()
 {
 	User &u = Kernel::Instance().GetUser();
 	u.u_error = User::my_NOERROR;
-	int fd = fopen(u.u_curdir, (File::FREAD) );
+	int fd = fopen(u.u_curdir, "r" );
 	char tempFilename[32] = { 0 };
 	for (;;)
 	{
@@ -53,26 +53,36 @@ void TestAPI::ls()
 }
 
 //创建文件
-int TestAPI::fcreate(char *filename,int mode)
+int TestAPI::fcreate(char *filename,string mode)
 {
 	User &u = Kernel::Instance().GetUser();
 	u.u_error = User::my_NOERROR;
 	u.u_ar0 = 0;
 	u.u_dirp = filename;
-	u.u_arg[1] = Inode::IRWXU;
+	if(mode == "r")
+		u.u_arg[1] = Inode::IREAD;
+	else if(mode == "w")
+		u.u_arg[1] = Inode::IWRITE;
+	else
+		u.u_arg[1] = Inode::IRWXU;
 	FileManager &fm = Kernel::Instance().GetFileManager();
 	fm.Creat();
 	return u.u_ar0;
 }
 
 //打开文件
-int TestAPI::fopen(char *pathname,int mode)
+int TestAPI::fopen(char *pathname,string mode)
 {
 	User &u = Kernel::Instance().GetUser();
 	u.u_error = User::my_NOERROR;
 	u.u_ar0 = 0;
 	u.u_dirp = pathname;
-	u.u_arg[1] = mode;
+	if(mode == "r")
+		u.u_arg[1] = File::FREAD;
+	else if(mode == "w")
+		u.u_arg[1] = File::FWRITE;
+	else
+		u.u_arg[1] = File::FREAD | File::FWRITE;
 	FileManager &fm = Kernel::Instance().GetFileManager();
 	fm.Open();
 	return u.u_ar0;
@@ -181,8 +191,8 @@ void TestAPI::fin(char *fileout, char *filein){
         return;
     }
 	// 创建内部文件
-	fcreate(filein,511);
-	int ifd = fopen(filein,511);
+	int ifd = fcreate(filein,"rw");
+	// int ifd = fopen(filein,"rw");
 	if (ifd < 0){
 		cout << "Fail to open file(in)" << endl;
 		return;
@@ -222,7 +232,7 @@ void TestAPI::fout(char *filein, char *fileout){
         return;
     }
 	// 打开内部文件
-	int ifd = fopen(filein,511);
+	int ifd = fopen(filein,"rw");
 	if (ifd < 0){
 		cout << "Fail to open file(in)" << endl;
 		return;
@@ -265,9 +275,6 @@ void TestAPI::quit()
 
 //菜单
 void TestAPI::Menu(){
-	cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>" << endl;
-    cout << "                   Secondary File System in Ubuntu                  " << endl;
-	cout << ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>" << endl;
 	while (true)
 	{
 		cout << endl;
@@ -295,10 +302,10 @@ void TestAPI::Menu(){
 		string filename2;
 		string inBuf;
 		string dirname;
+		string mode;
 		int tempfd; 
 		int outSeek;
 		int inLen;
-		int mode;
 		int openfd;
 		int tempPtrname;
 		int outLen;
@@ -320,8 +327,16 @@ void TestAPI::Menu(){
 			cin >> filename;
 			tempFilename = new char[filename.length()+1];
 			strcpy(tempFilename, filename.c_str());
-			cout << "[root@SecondaryFileSystem "<< this->curdir << "]# 请输入第二个参数(打开方式):";
-			cin >> mode;
+			cout << "[root@SecondaryFileSystem "<< this->curdir << "]# 请输入第二个参数(打开方式)(r/w/rw):";
+			while(1){
+				cin >> mode;
+				if(mode == "r" || mode == "w" ||mode == "rw")
+					break;
+				cout << endl;
+				cout << "输入错误！请重新输入(r/w/rw)：";
+				cin.clear();
+				cin.ignore(numeric_limits<streamsize>::max(), '\n');
+			}
 			openfd = fopen(tempFilename, mode);
 			if (openfd < 0)
 				cout << "[root@SecondaryFileSystem "<< this->curdir << "]# open失败" << endl;
@@ -373,8 +388,16 @@ void TestAPI::Menu(){
 			cin >> filename;
 			tempFilename = new char[filename.length() + 1];
 			strcpy(tempFilename, filename.c_str());
-			cout << "[root@SecondaryFileSystem "<< this->curdir << "]# 请输入第二个参数(创建模式):";
-			cin >> mode;
+			cout << "[root@SecondaryFileSystem "<< this->curdir << "]# 请输入第二个参数(创建模式)(r/w/rw):";
+			while(1){
+				cin >> mode;
+				if(mode == "r" || mode == "w" ||mode == "rw")
+					break;
+				cout << endl;
+				cout << "输入错误！请重新输入(r/w/rw)：";
+				cin.clear();
+				cin.ignore(numeric_limits<streamsize>::max(), '\n');
+			}
 			creatfd = fcreate(tempFilename, mode);
 			if (creatfd < 0)
 				cout << "[root@SecondaryFileSystem "<< this->curdir << "]# create失败" << endl;
